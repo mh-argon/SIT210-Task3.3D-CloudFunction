@@ -1,0 +1,81 @@
+int LED = D6;
+int photoSensor = A0;
+int connected;
+int disconnected;
+int beamThreshold;
+
+bool beamBroken = false;
+
+void setup() 
+{
+    pinMode(LED, OUTPUT);
+    Particle.subscribe("Deakin_RIOT_SIT210_Photon_Buddy", myHandler);
+    
+    digitalWrite(LED, HIGH);
+    digitalWrite(LED, LOW);
+    digitalWrite(LED, HIGH);
+    digitalWrite(LED, LOW);
+    delay(1000);
+    
+    int currentBeam1 = analogRead(photoSensor);
+    delay(200);
+    int currentBeam2 = analogRead(photoSensor);
+    delay(1000);
+    
+    digitalWrite(LED, HIGH);
+    digitalWrite(LED, LOW);
+    digitalWrite(LED, HIGH);
+    digitalWrite(LED, LOW);
+    delay(1000);
+    
+    int currentBeam3 = analogRead(photoSensor);
+    delay(200);
+    int currentBeam4 = analogRead(photoSensor);
+    delay(1000);
+    
+    digitalWrite(LED, HIGH);
+    digitalWrite(LED, LOW);
+    digitalWrite(LED, HIGH);
+    digitalWrite(LED, LOW);
+    delay(1000);
+    
+    connected = (currentBeam1 + currentBeam2) / 2;
+    disconnected = (currentBeam3 + currentBeam4) / 2;
+    beamThreshold = (connected + disconnected) / 2;
+}
+
+void loop() 
+{
+    if (analogRead(photoSensor) > beamThreshold)
+    {
+        if (beamBroken == true)
+        {
+            Particle.publish("Deakin_RIOT_SIT210_Photon_Buddy", "n/a");
+            beamBroken = false;
+        }
+    }
+    else
+    {
+        if (beamBroken == false)
+        {
+            Particle.publish("Deakin_RIOT_SIT210_Photon_Buddy", "wave");
+            beamBroken = true;
+        }
+    }
+}
+
+void myHandler(const char *event, const char *data)
+{
+    if (strcmp(data, "wave") == 0)
+    {
+        digitalWrite(LED, HIGH);
+    }
+    else if (strcmp(data, "n/a") == 0)
+    {
+        digitalWrite(LED, LOW);
+    }
+    else
+    {
+        // nothing
+    }
+}
